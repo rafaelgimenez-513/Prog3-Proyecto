@@ -44,6 +44,9 @@ public class Usuario {
             biblioteca.add(juego);
         }
     }
+    public void eliminarJuegoBiblioteca(Juego juego) {
+    	biblioteca.remove(juego);
+    }
     
     
 

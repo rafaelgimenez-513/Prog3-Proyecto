@@ -2,12 +2,14 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -18,7 +20,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import domain.Categoria;
@@ -31,78 +35,104 @@ public class VentanaPrincipal extends JFrame {
     private static final long serialVersionUID = 1L;
 
     private Usuario usuario;
+    private List<Usuario> listaUsuarios;
     private List<Juego> listaJuegos;
     private JTabbedPane tabbedPane;
 
-    // Paneles de los distintos roles
     private PanelTienda panelTienda;
     private PanelBiblioteca panelBiblioteca;
     private PanelRanking panelRanking;
     private PanelAdministrador panelAdmin;
     private DefaultTableModel modeloMisSubidas;
 
-    public VentanaPrincipal(Usuario usuario, List<Juego> juegos) {
+    public VentanaPrincipal(Usuario usuario, List<Usuario> listaUsuarios, List<Juego> juegos) {
         this.usuario = usuario;
+        this.listaUsuarios = listaUsuarios;
         this.listaJuegos = juegos;
 
-        setTitle("SteamApp Store - Sesión de " + usuario.getNombre() + " (" + usuario.getTipoUsuario() + ")");
-        setSize(850, 540);
+        setTitle("STEAM - " + usuario.getNombre() + " (" + usuario.getTipoUsuario() + ")");
+        setSize(900, 580);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+        getContentPane().setBackground(TemaSteam.FONDO_OSCURO);
 
-        // 1. Barra superior con información del usuario, perfil y cerrar sesión
+        //perfil y cerrar sesion
         JPanel barraSuperior = new JPanel(new BorderLayout());
-        JLabel lblBienvenida = new JLabel("  Bienvenido, " + usuario.getNombre() + " | Rol: " + usuario.getTipoUsuario());
+        barraSuperior.setBackground(TemaSteam.FONDO_OSCURO);
+        barraSuperior.setBorder(BorderFactory.createEmptyBorder(10, 18, 10, 18));
 
-        JPanel panelBotonesTop = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JLabel lblBienvenida = new JLabel("STEAM  |  " + usuario.getNombre().toUpperCase() + "  [" + usuario.getTipoUsuario() + "]");
+        lblBienvenida.setForeground(TemaSteam.AZUL_STEAM);
+        lblBienvenida.setFont(new Font("SansSerif", Font.BOLD, 14));
+
+        JPanel panelBotonesTop = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelBotonesTop.setBackground(TemaSteam.FONDO_OSCURO);
+
         JButton btnPerfil = new JButton("Mi Perfil");
+        TemaSteam.estilizarBoton(btnPerfil, TemaSteam.FONDO_TARJETA);
         btnPerfil.addActionListener(e -> new PerfilDialog(this, usuario).setVisible(true));
+
+        JButton btnCerrarSesion = new JButton("Cerrar sesión");
+        TemaSteam.estilizarBoton(btnCerrarSesion, TemaSteam.ROJO_PELIGRO);
+        btnCerrarSesion.addActionListener(e -> cerrarSesion());
+
         panelBotonesTop.add(btnPerfil);
+        panelBotonesTop.add(btnCerrarSesion);
 
         barraSuperior.add(lblBienvenida, BorderLayout.WEST);
         barraSuperior.add(panelBotonesTop, BorderLayout.EAST);
         add(barraSuperior, BorderLayout.NORTH);
 
-        // 2. Contenedor central de pestañas según el TipoUsuario
+        //panel central
         tabbedPane = new JTabbedPane();
+        tabbedPane.setBackground(TemaSteam.FONDO_TARJETA);
+        tabbedPane.setForeground(TemaSteam.TEXTO_BLANCO);
+        tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE) {
             panelTienda = new PanelTienda(usuario, listaJuegos);
             panelBiblioteca = new PanelBiblioteca(usuario);
             panelRanking = new PanelRanking(listaJuegos);
 
-            // Al terminar una descarga en Tienda, refrescar Biblioteca y Ranking
             panelTienda.setOnDescargaCompletada(() -> {
                 panelBiblioteca.actualizarTabla();
                 panelRanking.actualizarTabla();
             });
+            panelBiblioteca.setOnBibliotecaModificada(() -> panelTienda.actualizarTabla());
 
-            tabbedPane.addTab("Tienda", panelTienda);
-            tabbedPane.addTab("Mi Biblioteca", panelBiblioteca);
-            tabbedPane.addTab("Ranking TOP", panelRanking);
+            tabbedPane.addTab("  TIENDA  ", panelTienda);
+            tabbedPane.addTab("  BIBLIOTECA  ", panelBiblioteca);
+            tabbedPane.addTab("  RANKING TOP  ", panelRanking);
 
         } else if (usuario.getTipoUsuario() == TipoUsuario.DESARROLLADOR) {
             JPanel panelDev = crearPanelDesarrollador();
             panelTienda = new PanelTienda(usuario, listaJuegos);
+            panelBiblioteca = new PanelBiblioteca(usuario);
             panelRanking = new PanelRanking(listaJuegos);
 
-            tabbedPane.addTab("Mis Videojuegos (Desarrollador)", panelDev);
-            tabbedPane.addTab("Vista Tienda", panelTienda);
-            tabbedPane.addTab("Ranking TOP", panelRanking);
+            panelTienda.setOnDescargaCompletada(() -> {
+                panelBiblioteca.actualizarTabla();
+                panelRanking.actualizarTabla();
+            });
+            panelBiblioteca.setOnBibliotecaModificada(() -> panelTienda.actualizarTabla());
+
+            tabbedPane.addTab("  MIS PUBLICACIONES  ", panelDev);
+            tabbedPane.addTab("  TIENDA  ", panelTienda);
+            tabbedPane.addTab("  BIBLIOTECA  ", panelBiblioteca);
+            tabbedPane.addTab("  RANKING TOP  ", panelRanking);
 
         } else if (usuario.getTipoUsuario() == TipoUsuario.ADMINISTRADOR) {
             panelAdmin = new PanelAdministrador(listaJuegos);
             panelRanking = new PanelRanking(listaJuegos);
 
-            tabbedPane.addTab("Panel Administrador", panelAdmin);
-            tabbedPane.addTab("Ranking TOP", panelRanking);
+            tabbedPane.addTab("  ADMINISTRADOR  ", panelAdmin);
+            tabbedPane.addTab("  RANKING TOP  ", panelRanking);
         }
 
-        // Refrescar datos automáticamente cada vez que el usuario cambie de pestaña
         tabbedPane.addChangeListener(e -> refrescarPestanaActual());
 
-        // KeyListener para navegar por las opciones de menú con flechas izquierda/derecha (Persona 4)
+        //navegar por las pestañas con flechas izquierda/derecha
         tabbedPane.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -119,6 +149,18 @@ public class VentanaPrincipal extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
+    private void cerrarSesion() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "¿Quieres cerrar sesión y volver al inicio?",
+                "Cerrar sesión",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            dispose();
+            abrirLogin(listaUsuarios, listaJuegos);
+        }
+    }
+
     private void refrescarPestanaActual() {
         if (panelTienda != null) panelTienda.actualizarTabla();
         if (panelBiblioteca != null) panelBiblioteca.actualizarTabla();
@@ -127,9 +169,15 @@ public class VentanaPrincipal extends JFrame {
         if (modeloMisSubidas != null) actualizarTablaDesarrollador();
     }
 
-    // Vista exclusiva del desarrollador conectada al DialogSubirJuego de Persona 3
     private JPanel crearPanelDesarrollador() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 18, 15, 18));
+        TemaSteam.estilizarPanel(panel);
+
+        JLabel lblTitulo = new JLabel("MIS VIDEOJUEGOS PUBLICADOS");
+        TemaSteam.estilizarTitulo(lblTitulo);
+        panel.add(lblTitulo, BorderLayout.NORTH);
+
         String[] columnas = { "Icono", "Nombre", "Categoría", "Peso (MB)", "Ventas" };
         modeloMisSubidas = new DefaultTableModel(columnas, 0) {
             private static final long serialVersionUID = 1L;
@@ -147,9 +195,20 @@ public class VentanaPrincipal extends JFrame {
 
         JTable tablaDev = new JTable(modeloMisSubidas);
         tablaDev.setRowHeight(48);
-        panel.add(new JScrollPane(tablaDev), BorderLayout.CENTER);
 
-        JButton btnSubir = new JButton("+ Subir nuevo videojuego");
+        JScrollPane scroll = new JScrollPane(tablaDev);
+        TemaSteam.estilizarTabla(tablaDev, scroll);
+
+        DefaultTableCellRenderer centrado = new DefaultTableCellRenderer();
+        centrado.setHorizontalAlignment(SwingConstants.CENTER);
+        tablaDev.getColumnModel().getColumn(2).setCellRenderer(centrado);
+        tablaDev.getColumnModel().getColumn(3).setCellRenderer(centrado);
+        tablaDev.getColumnModel().getColumn(4).setCellRenderer(centrado);
+
+        panel.add(scroll, BorderLayout.CENTER);
+
+        JButton btnSubir = new JButton("+  Subir nuevo videojuego");
+        TemaSteam.estilizarBoton(btnSubir, TemaSteam.VERDE_STEAM);
         btnSubir.addActionListener(e -> {
             DialogSubirJuego dialog = new DialogSubirJuego(this, usuario);
             dialog.setVisible(true);
@@ -162,6 +221,7 @@ public class VentanaPrincipal extends JFrame {
         });
 
         JPanel panelSur = new JPanel();
+        TemaSteam.estilizarPanel(panelSur);
         panelSur.add(btnSubir);
         panel.add(panelSur, BorderLayout.SOUTH);
 
@@ -189,10 +249,21 @@ public class VentanaPrincipal extends JFrame {
         return new ImageIcon(escalada);
     }
 
-    // Punto de entrada principal de la aplicación con datos iniciales
+    public static void abrirLogin(List<Usuario> listaUsuarios, List<Juego> listaJuegos) {
+        IniciarSesion login = new IniciarSesion(null, listaUsuarios);
+        login.setVisible(true);
+
+        Usuario logueado = login.getUsuarioLogueado();
+        if (logueado != null) {
+            VentanaPrincipal ventana = new VentanaPrincipal(logueado, listaUsuarios, listaJuegos);
+            ventana.setVisible(true);
+        } else {
+            System.exit(0);
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // 1. Usuarios de prueba (uno de cada rol)
             List<Usuario> listaUsuarios = new ArrayList<>();
             Usuario cliente = new Usuario("cliente", "1234", TipoUsuario.CLIENTE);
             Usuario dev1 = new Usuario("Valve", "1234", TipoUsuario.DESARROLLADOR);
@@ -204,7 +275,6 @@ public class VentanaPrincipal extends JFrame {
             listaUsuarios.add(dev2);
             listaUsuarios.add(admin);
 
-            // 2. Catálogo inicial de juegos y redes con tus iconos de resources/images
             List<Juego> listaJuegos = new ArrayList<>();
             listaJuegos.add(new Juego(cargarIcono("minecraft.png"), "Minecraft", 520.0, Categoria.JUEGO, dev1, 340, 1500));
             listaJuegos.add(new Juego(cargarIcono("counter-strike.png"), "Counter-Strike", 850.0, Categoria.JUEGO, dev1, 510, 1280));
@@ -217,17 +287,7 @@ public class VentanaPrincipal extends JFrame {
             listaJuegos.add(new Juego(cargarIcono("fnaf3.png"), "Five Nights at Freddy's 3", 290.0, Categoria.JUEGO, dev2, 70, 680));
             listaJuegos.add(new Juego(cargarIcono("fnaf4.png"), "Five Nights at Freddy's 4", 330.0, Categoria.JUEGO, dev2, 110, 810));
 
-            // 3. Lanzar diálogo de inicio de sesión
-            IniciarSesion login = new IniciarSesion(null, listaUsuarios);
-            login.setVisible(true);
-
-            Usuario logueado = login.getUsuarioLogueado();
-            if (logueado != null) {
-                VentanaPrincipal ventana = new VentanaPrincipal(logueado, listaJuegos);
-                ventana.setVisible(true);
-            } else {
-                System.exit(0);
-            }
+            abrirLogin(listaUsuarios, listaJuegos);
         });
     }
 }

@@ -1,9 +1,19 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import domain.Juego;
@@ -17,23 +27,19 @@ public class PanelAdministrador extends JPanel {
     private DefaultTableModel modelo;
 
     public PanelAdministrador(List<Juego> listaJuegos) {
-
         this.listaJuegos = listaJuegos;
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(15, 18, 15, 18));
+        TemaSteam.estilizarPanel(this);
 
-        // Titulo del panel
-        JLabel titulo = new JLabel("Administracion de videojuegos",
-                SwingConstants.CENTER);
+        JLabel titulo = new JLabel("ADMINISTRACIÓN DEL CATÁLOGO", SwingConstants.LEFT);
+        TemaSteam.estilizarTitulo(titulo);
         add(titulo, BorderLayout.NORTH);
 
-        // Crear la tabla de videojuegos
-        String[] columnas = {
-                "Nombre", "Categoria", "Peso", "Desarrollador", "Ventas"
-        };
+        String[] columnas = { "Nombre", "Categoría", "Peso (MB)", "Desarrollador", "Ventas" };
 
         modelo = new DefaultTableModel(columnas, 0) {
-
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -43,30 +49,37 @@ public class PanelAdministrador extends JPanel {
         };
 
         tabla = new JTable(modelo);
-        tabla.setRowHeight(30);
-
-        // Permitir seleccionar solo un videojuego
+        tabla.setRowHeight(36);
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(tabla);
+        TemaSteam.estilizarTabla(tabla, scroll);
 
-        // Boton para eliminar un videojuego
-        JButton btnEliminar = new JButton("Eliminar videojuego");
-        add(btnEliminar, BorderLayout.SOUTH);
+        DefaultTableCellRenderer centrado = new DefaultTableCellRenderer();
+        centrado.setHorizontalAlignment(SwingConstants.CENTER);
+        tabla.getColumnModel().getColumn(1).setCellRenderer(centrado);
+        tabla.getColumnModel().getColumn(2).setCellRenderer(centrado);
+        tabla.getColumnModel().getColumn(4).setCellRenderer(centrado);
 
+        add(scroll, BorderLayout.CENTER);
+
+        JPanel panelSur = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        TemaSteam.estilizarPanel(panelSur);
+
+        JButton btnEliminar = new JButton("🗑  Eliminar videojuego seleccionado");
+        TemaSteam.estilizarBoton(btnEliminar, TemaSteam.ROJO_PELIGRO);
         btnEliminar.addActionListener(e -> eliminarJuego());
 
-        // Mostrar los juegos al abrir el panel
+        panelSur.add(btnEliminar);
+        add(panelSur, BorderLayout.SOUTH);
+
         actualizarTabla();
     }
 
-    // Actualizar la tabla con los videojuegos disponibles
     public void actualizarTabla() {
-
         modelo.setRowCount(0);
 
         for (Juego juego : listaJuegos) {
-
             modelo.addRow(new Object[] {
                     juego.getNombre(),
                     juego.getCategoria(),
@@ -77,41 +90,30 @@ public class PanelAdministrador extends JPanel {
         }
     }
 
-    // Eliminar el videojuego seleccionado
     private void eliminarJuego() {
-
         int fila = tabla.getSelectedRow();
 
-        // Comprobar que se ha seleccionado un videojuego
         if (fila == -1) {
-
             JOptionPane.showMessageDialog(
                     this,
                     "Selecciona un videojuego para eliminar.",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-
             return;
         }
 
-        // Obtener el videojuego seleccionado
         int filaModelo = tabla.convertRowIndexToModel(fila);
         Juego juego = listaJuegos.get(filaModelo);
 
-        // Pedir confirmacion antes de eliminar
         int respuesta = JOptionPane.showConfirmDialog(
                 this,
                 "¿Seguro que quieres eliminar " + juego.getNombre() + "?",
-                "Confirmar eliminacion",
+                "Confirmar eliminación",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 
-        // Eliminar solamente si el administrador confirma
         if (respuesta == JOptionPane.YES_OPTION) {
-
             listaJuegos.remove(juego);
-
-            // Actualizar la tabla despues de eliminar
             actualizarTabla();
 
             JOptionPane.showMessageDialog(
