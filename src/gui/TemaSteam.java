@@ -18,7 +18,7 @@ import javax.swing.table.JTableHeader;
 
 public class TemaSteam {
 
-    // Paleta de colores inspirada en Steam (Clase generada por IAG)
+    // Paleta de colores inspirada en Steam (Clase generada con IAG)
     public static final Color FONDO_OSCURO = new Color(23, 26, 33);
     public static final Color FONDO_PANEL = new Color(27, 40, 56);
     public static final Color FONDO_TARJETA = new Color(42, 71, 94);
