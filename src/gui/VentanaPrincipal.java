@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Image;
@@ -51,7 +52,8 @@ public class VentanaPrincipal extends JFrame {
         this.listaJuegos = juegos;
 
         setTitle("STEAM - " + usuario.getNombre() + " (" + usuario.getTipoUsuario() + ")");
-        setSize(900, 580);
+        setSize(1000, 700);
+        setMinimumSize(new Dimension(800,600));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
