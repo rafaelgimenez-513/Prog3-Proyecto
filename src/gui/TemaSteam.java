@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 
 public class TemaSteam {
 
@@ -66,8 +67,15 @@ public class TemaSteam {
     }
 
     public static void estilizarTabla(JTable tabla, JScrollPane scroll) {
-        // 1. Bloquear que el usuario mueva las columnas
         tabla.getTableHeader().setReorderingAllowed(false);
+        tabla.getTableHeader().setResizingAllowed(false);
+        
+        if (tabla.getColumnCount() > 0 && "Icono".equals(tabla.getColumnName(0))) {
+            TableColumn colIcono = tabla.getColumnModel().getColumn(0);
+            colIcono.setMinWidth(48);
+            colIcono.setMaxWidth(48);
+            colIcono.setPreferredWidth(48);
+        }
 
         tabla.setBackground(FONDO_OSCURO);
         tabla.setForeground(TEXTO_CLARO);
