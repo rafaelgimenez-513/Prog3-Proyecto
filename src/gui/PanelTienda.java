@@ -119,7 +119,7 @@ public class PanelTienda extends JPanel {
                 if (!isSelected) {
                     c.setBackground(TemaSteam.FONDO_OSCURO);
                     if ("En biblioteca".equals(value)) {
-                        c.setForeground(new Color(139, 195, 74)); // Verde claro legible sobre oscuro
+                        c.setForeground(new Color(139, 195, 74));
                     } else {
                         c.setForeground(TemaSteam.AZUL_STEAM);
                     }
