@@ -18,9 +18,12 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
@@ -41,6 +44,7 @@ public class PanelTienda extends JPanel {
     private JButton btnDescargar;
     private JProgressBar barraProgreso;
     private JLabel lblEstadoDescarga;
+    private JTextField txtFiltro;
 
     private boolean descargando = false;
     private Runnable onDescargaCompletada;
@@ -63,12 +67,44 @@ public class PanelTienda extends JPanel {
 
         JPanel panelFiltro = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         TemaSteam.estilizarPanel(panelFiltro);
+        
+        JLabel lblBuscar = new JLabel("Buscar: ");
+        TemaSteam.estilizarLabel(lblBuscar);
+        txtFiltro = new JTextField(14);
+        TemaSteam.estilizarCampoTexto(txtFiltro);
+        
+        txtFiltro.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+        });
+        
         JLabel lblFiltro = new JLabel("Categoría: ");
         TemaSteam.estilizarLabel(lblFiltro);
 
         comboFiltroCategoria = new JComboBox<>(new String[] { "Todas", "JUEGO", "REDES" });
         TemaSteam.estilizarCombo(comboFiltroCategoria);
         comboFiltroCategoria.addActionListener(e -> actualizarTabla());
+        
+        panelFiltro.add(lblBuscar);
+        panelFiltro.add(txtFiltro);
+        panelFiltro.add(lblFiltro);
+        panelFiltro.add(comboFiltroCategoria);
+
+        panelSuperior.add(lblTitulo, BorderLayout.WEST);
+        panelSuperior.add(panelFiltro, BorderLayout.EAST);
+        add(panelSuperior, BorderLayout.NORTH);
 
         panelFiltro.add(lblFiltro);
         panelFiltro.add(comboFiltroCategoria);
@@ -172,9 +208,13 @@ public class PanelTienda extends JPanel {
         juegosMostrados.clear();
 
         String filtro = (String) comboFiltroCategoria.getSelectedItem();
+        String textoBusqueda = txtFiltro.getText().trim().toLowerCase();
 
         for (Juego j : listaJuegos) {
-            if ("Todas".equals(filtro) || j.getCategoria().name().equals(filtro)) {
+            boolean coincideCategoria = "Todas".equals(filtro) || j.getCategoria().name().equals(filtro);
+            boolean coincideNombre = textoBusqueda.isEmpty() || j.getNombre().toLowerCase().contains(textoBusqueda);
+
+            if (coincideCategoria && coincideNombre) {
                 juegosMostrados.add(j);
                 String nombreDev = (j.getDesarrollador() != null) ? j.getDesarrollador().getNombre() : "Desconocido";
                 String estado = usuarioActual.getBiblioteca().contains(j) ? "En biblioteca" : "Disponible";
