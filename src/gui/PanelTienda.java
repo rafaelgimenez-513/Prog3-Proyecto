@@ -264,6 +264,7 @@ public class PanelTienda extends JPanel {
         descargando = true;
         btnDescargar.setEnabled(false);
         barraProgreso.setValue(0);
+        barraProgreso.setString("0% - Calculando tiempo...");
         lblEstadoDescarga.setText("Descargando " + juegoSeleccionado.getNombre() + "...");
 
         long pausaMs = Math.max(15, Math.min(60, (long) (juegoSeleccionado.getPeso() / 10)));
@@ -273,11 +274,17 @@ public class PanelTienda extends JPanel {
                 for (int progreso = 1; progreso <= 100; progreso++) {
                     Thread.sleep(pausaMs);
                     final int porcentajeActual = progreso;
+                    
+                    long msRestantes = (100 - porcentajeActual) * pausaMs;
+                    int segundosRestantes = (int) Math.ceil(msRestantes / 1000.0);
+                    String textoTiempo = (segundosRestantes == 1)
+                            ? "1s restante"
+                            : segundosRestantes + "s restantes";
 
                     SwingUtilities.invokeLater(() -> {
                         barraProgreso.setValue(porcentajeActual);
-                        lblEstadoDescarga.setText("Descargando " + juegoSeleccionado.getNombre()
-                                + " (" + porcentajeActual + "%)");
+                        barraProgreso.setString(porcentajeActual + "%  (" + textoTiempo + ")");
+                        lblEstadoDescarga.setText("Descargando " + juegoSeleccionado.getNombre() + " (" + porcentajeActual + "%)");
                     });
                 }
 
@@ -287,6 +294,7 @@ public class PanelTienda extends JPanel {
 
                     descargando = false;
                     btnDescargar.setEnabled(true);
+                    barraProgreso.setString("100% - Completado");
                     lblEstadoDescarga.setText("Descarga completada: " + juegoSeleccionado.getNombre());
 
                     actualizarTabla();
@@ -306,6 +314,7 @@ public class PanelTienda extends JPanel {
                 SwingUtilities.invokeLater(() -> {
                     descargando = false;
                     btnDescargar.setEnabled(true);
+                    barraProgreso.setString("Cancelado");
                     lblEstadoDescarga.setText("Descarga cancelada.");
                 });
             }
