@@ -8,15 +8,20 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+
 
 import domain.Juego;
 import domain.Usuario;
@@ -34,6 +39,8 @@ public class PanelBiblioteca extends JPanel {
     private JButton btnEjecutar;
     private JButton btnDesinstalar;
     private Runnable onBibliotecaModificada;
+    private JTextField txtFiltro;
+    private JComboBox<String> comboFiltroCategoria;
 
     public PanelBiblioteca(Usuario usuarioActual) {
         this.usuarioActual = usuarioActual;
@@ -49,12 +56,56 @@ public class PanelBiblioteca extends JPanel {
 
         JLabel lblTitulo = new JLabel("MI BIBLIOTECA", SwingConstants.LEFT);
         TemaSteam.estilizarTitulo(lblTitulo);
+        
+        JPanel panelFiltro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        TemaSteam.estilizarPanel(panelFiltro);
+
+        JLabel lblBuscar = new JLabel("Buscar: ");
+        TemaSteam.estilizarLabel(lblBuscar);
+
+        txtFiltro = new JTextField(14);
+        TemaSteam.estilizarCampoTexto(txtFiltro);
+
+        txtFiltro.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                actualizarTabla();
+            }
+        });
+
+        JLabel lblCategoria = new JLabel("Categoría: ");
+        TemaSteam.estilizarLabel(lblCategoria);
+
+        comboFiltroCategoria = new JComboBox<>(new String[] { "Todas", "JUEGO", "REDES" });
+        TemaSteam.estilizarCombo(comboFiltroCategoria);
+        comboFiltroCategoria.addActionListener(e -> actualizarTabla());
+
+        panelFiltro.add(lblBuscar);
+        panelFiltro.add(txtFiltro);
+        panelFiltro.add(lblCategoria);
+        panelFiltro.add(comboFiltroCategoria);
 
         lblContador = new JLabel("0 aplicaciones instaladas", SwingConstants.RIGHT);
         TemaSteam.estilizarLabel(lblContador);
+        lblContador.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 0));
 
+        JPanel panelDerecha = new JPanel(new BorderLayout());
+        TemaSteam.estilizarPanel(panelDerecha);
+        panelDerecha.add(panelFiltro, BorderLayout.CENTER);
+        panelDerecha.add(lblContador, BorderLayout.EAST);
+        
         panelSuperior.add(lblTitulo, BorderLayout.WEST);
-        panelSuperior.add(lblContador, BorderLayout.EAST);
+        panelSuperior.add(panelDerecha, BorderLayout.EAST);
         add(panelSuperior, BorderLayout.NORTH);
 
         // 2. Tabla de juegos
@@ -114,22 +165,36 @@ public class PanelBiblioteca extends JPanel {
     public void actualizarTabla() {
         modelo.setRowCount(0);
         juegosBiblioteca.clear();
+        
+        String categoriaSeleccionada = (comboFiltroCategoria != null)
+                ? (String) comboFiltroCategoria.getSelectedItem()
+                : "Todas";
+        String textoBusqueda = (txtFiltro != null)
+                ? txtFiltro.getText().trim().toLowerCase()
+                : "";
 
         List<Juego> lista = usuarioActual.getBiblioteca();
         for (Juego j : lista) {
-            juegosBiblioteca.add(j);
-            String nombreDev = (j.getDesarrollador() != null) ? j.getDesarrollador().getNombre() : "Desconocido";
+            boolean coincideCategoria = "Todas".equals(categoriaSeleccionada)
+                    || j.getCategoria().name().equals(categoriaSeleccionada);
+            boolean coincideNombre = textoBusqueda.isEmpty()
+                    || j.getNombre().toLowerCase().contains(textoBusqueda);
 
-            modelo.addRow(new Object[] {
-                    j.getIcono(),
-                    j.getNombre(),
-                    j.getCategoria(),
-                    j.getPeso(),
-                    nombreDev
-            });
+            if (coincideCategoria && coincideNombre) {
+                juegosBiblioteca.add(j);
+                String nombreDev = (j.getDesarrollador() != null) ? j.getDesarrollador().getNombre() : "Desconocido";
+
+                modelo.addRow(new Object[] {
+                        j.getIcono(),
+                        j.getNombre(),
+                        j.getCategoria(),
+                        j.getPeso(),
+                        nombreDev
+                });
+            }
         }
 
-        int total = juegosBiblioteca.size();
+        int total = usuarioActual.getBiblioteca().size();
         lblContador.setText(total + (total == 1 ? " aplicación instalada" : " aplicaciones instaladas"));
     }
 
