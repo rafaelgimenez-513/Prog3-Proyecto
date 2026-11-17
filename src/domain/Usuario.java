@@ -1,6 +1,9 @@
 package domain;
 
 import java.util.List;
+
+import javax.swing.Icon;
+
 import java.util.ArrayList;
 
 public class Usuario {
@@ -9,6 +12,11 @@ public class Usuario {
     private String contraseña;
     private TipoUsuario tipoUsuario;
     private ArrayList<Juego> biblioteca;
+    
+    private Icon avatar;
+    private String biografia;
+    private String estadoConexion;
+    
 
     public Usuario(String nombre, String contraseña, TipoUsuario tipoUsuario) {
         super();
@@ -16,6 +24,8 @@ public class Usuario {
         this.contraseña = contraseña;
         this.tipoUsuario = tipoUsuario;
         this.biblioteca = new ArrayList<>();
+        this.biografia = "Sin información adicional.";
+        this.estadoConexion = "En línea";
     }
 
     public String getNombre() {
@@ -47,7 +57,29 @@ public class Usuario {
     public void eliminarJuegoBiblioteca(Juego juego) {
     	biblioteca.remove(juego);
     }
-    
+    public Icon getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(Icon avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getBiografia() {
+        return biografia;
+    }
+
+    public void setBiografia(String biografia) {
+        this.biografia = biografia;
+    }
+
+    public String getEstadoConexion() {
+        return estadoConexion;
+    }
+
+    public void setEstadoConexion(String estadoConexion) {
+        this.estadoConexion = estadoConexion;
+    }
     
 
     @Override

@@ -68,7 +68,7 @@ public class VentanaPrincipal extends JFrame {
 
         JButton btnPerfil = new JButton("Mi Perfil");
         TemaSteam.estilizarBoton(btnPerfil, TemaSteam.FONDO_TARJETA);
-        btnPerfil.addActionListener(e -> new PerfilDialog(this, usuario).setVisible(true));
+        btnPerfil.addActionListener(e -> new PerfilDialog(this, usuario, listaJuegos).setVisible(true));
 
         JButton btnCerrarSesion = new JButton("Cerrar sesión");
         TemaSteam.estilizarBoton(btnCerrarSesion, TemaSteam.ROJO_PELIGRO);
@@ -247,7 +247,5 @@ public class VentanaPrincipal extends JFrame {
         } else {
             System.exit(0);
         }
-    }
-
-    
+    } 
 }
