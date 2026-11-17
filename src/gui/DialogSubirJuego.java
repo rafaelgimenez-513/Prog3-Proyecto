@@ -19,6 +19,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 import domain.Categoria;
 import domain.Juego;
 import domain.Usuario;
@@ -31,6 +38,7 @@ public class DialogSubirJuego extends JDialog {
     private JTextField txtPeso;
     private JComboBox<Categoria> comboCategoria;
     private Icon iconoSeleccionado;
+    private File archivoImagenOriginal;
     private Usuario desarrollador;
     private Juego juegoCreado;
     private JLabel lblVistaPrevia;
@@ -112,6 +120,8 @@ public class DialogSubirJuego extends JDialog {
                         "No se ha podido cargar la imagen.");
                 return;
             }
+            
+            this.archivoImagenOriginal = archivo;
 
             Image imagenEscalada = imagen.getImage()
                     .getScaledInstance(40, 40, Image.SCALE_SMOOTH);
@@ -154,6 +164,11 @@ public class DialogSubirJuego extends JDialog {
                     "El peso debe ser mayor que 0.");
             return;
         }
+        
+        File archivoEnResources = copiarImagenAResources(archivoImagenOriginal);
+        ImageIcon imagenGuardada = new ImageIcon(archivoEnResources.getAbsolutePath());
+        Image imagenEscalada = imagenGuardada.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+        Icon iconoFinal = new ImageIcon(imagenEscalada);
 
         Categoria categoria = (Categoria) comboCategoria.getSelectedItem();
 
@@ -172,6 +187,30 @@ public class DialogSubirJuego extends JDialog {
 
     public Juego getJuegoCreado() {
         return juegoCreado;
+    }
+    
+    private File copiarImagenAResources(File archivoOrigen) {
+        try {
+            File carpetaDestino = new File("resources/images");
+            if (!carpetaDestino.exists()) {
+                carpetaDestino.mkdirs();
+            }
+
+            Path origen = archivoOrigen.toPath();
+            Path destino = Paths.get(carpetaDestino.getPath(), archivoOrigen.getName());
+
+            if (!origen.toAbsolutePath().equals(destino.toAbsolutePath())) {
+                Files.copy(origen, destino, StandardCopyOption.REPLACE_EXISTING);
+                File archivoCopiado = destino.toFile();
+                archivoCopiado.deleteOnExit();
+                return archivoCopiado;
+            }
+
+            return destino.toFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return archivoOrigen;
+        }
     }
 }
 
